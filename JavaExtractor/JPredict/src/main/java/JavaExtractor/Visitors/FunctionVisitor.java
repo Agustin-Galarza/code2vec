@@ -3,6 +3,7 @@ package JavaExtractor.Visitors;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.List;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -14,6 +15,7 @@ import JavaExtractor.Common.MethodContent;
 @SuppressWarnings("StringEquality")
 public class FunctionVisitor extends VoidVisitorAdapter<Object> {
 	private ArrayList<MethodContent> m_Methods = new ArrayList<>();
+	private List<MethodDeclaration> astMethods = new ArrayList<>();
 
 	@Override
 	public void visit(MethodDeclaration node, Object arg) {
@@ -35,6 +37,7 @@ public class FunctionVisitor extends VoidVisitorAdapter<Object> {
 		}
 
 		if (node.getBody() != null) {
+			astMethods.add((MethodDeclaration) node.clone());
 			m_Methods.add(new MethodContent(leaves, splitName, getMethodLength(node.getBody().toString())));
 		}
 	}
@@ -52,6 +55,10 @@ public class FunctionVisitor extends VoidVisitorAdapter<Object> {
 				.filter(line -> (line.trim() != "{" && line.trim() != "}" && line.trim() != ""))
 				.filter(line -> !line.trim().startsWith("/") && !line.trim().startsWith("*")).count();
 		return codeLength;
+	}
+
+	public List<MethodDeclaration> getASTMethods() {
+		return astMethods;
 	}
 
 	public ArrayList<MethodContent> getMethodContents() {

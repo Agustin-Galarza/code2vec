@@ -7,12 +7,15 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.List;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.body.MethodDeclaration;
+
 import JavaExtractor.Common.CommandLineValues;
 import JavaExtractor.Common.Common;
 import JavaExtractor.Common.MethodContent;
@@ -46,6 +49,15 @@ public class FeatureExtractor {
 		ArrayList<ProgramFeatures> programs = generatePathFeatures(methods);
 
 		return programs;
+	}
+
+	public List<MethodDeclaration> extractASTMethods(String code) throws ParseException, IOException {
+		CompilationUnit compilationUnit = parseFileWithRetries(code);
+		FunctionVisitor functionVisitor = new FunctionVisitor();
+
+		functionVisitor.visit(compilationUnit, null);
+
+		return functionVisitor.getASTMethods();
 	}
 
 	private CompilationUnit parseFileWithRetries(String code) throws IOException {

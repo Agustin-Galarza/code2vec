@@ -39,6 +39,12 @@ public class CommandLineValues {
 	@Option(name = "--max_child_id", required = false)
 	public int MaxChildId = Integer.MAX_VALUE;
 
+	@Option(name = "--raw_fn_dir", required = false)
+	public String fnDir = null;
+
+	@Option(name = "--raw_fn_filename", required = false)
+	public String fnFilename = "raw_fns.txt";
+
 	public CommandLineValues(String... args) throws CmdLineException {
 		CmdLineParser parser = new CmdLineParser(this);
 		try {
