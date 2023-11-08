@@ -18,9 +18,13 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-TRAIN_DIR=my_train_dir
-VAL_DIR=my_val_dir
-TEST_DIR=my_test_dir
+TRAIN_DIR=input_data/train
+VAL_DIR=input_data/val
+TEST_DIR=input_data/test
+RAW_FN_DIR=output_data
+RAW_TEST_FILE=text.txt
+RAW_TRAIN_FILE=train.txt
+RAW_VAL_FILE=val.txt
 DATASET_NAME=my_dataset
 MAX_CONTEXTS=200
 WORD_VOCAB_SIZE=1301136
@@ -39,13 +43,13 @@ mkdir -p data
 mkdir -p data/${DATASET_NAME}
 
 echo "Extracting paths from validation set..."
-${PYTHON} JavaExtractor/extract.py --dir ${VAL_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} --fnDir "./" --fnFile "raw_val_functions.txt" > ${VAL_DATA_FILE}
+${PYTHON} JavaExtractor/extract.py --dir ${VAL_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} --fnDir $RAW_FN_DIR --fnFile $RAW_VAL_FILE > ${VAL_DATA_FILE}
 echo "Finished extracting paths from validation set"
 echo "Extracting paths from test set..."
-${PYTHON} JavaExtractor/extract.py --dir ${TEST_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} --fnDir "./" --fnFile "raw_test_functions.txt" > ${TEST_DATA_FILE}
+${PYTHON} JavaExtractor/extract.py --dir ${TEST_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} --fnDir $RAW_FN_DIR --fnFile $RAW_TEST_FILE > ${TEST_DATA_FILE}
 echo "Finished extracting paths from test set"
 echo "Extracting paths from training set..."
-${PYTHON} JavaExtractor/extract.py --dir ${TRAIN_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} --fnDir "./" --fnFile "raw_train_functions.txt" | shuf > ${TRAIN_DATA_FILE}
+${PYTHON} JavaExtractor/extract.py --dir ${TRAIN_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} --fnDir $RAW_FN_DIR --fnFile $RAW_TRAIN_FILE | shuf > ${TRAIN_DATA_FILE}
 echo "Finished extracting paths from training set"
 
 # TARGET_HISTOGRAM_FILE=data/${DATASET_NAME}/${DATASET_NAME}.histo.tgt.c2v
