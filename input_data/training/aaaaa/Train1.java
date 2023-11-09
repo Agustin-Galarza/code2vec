@@ -1,4 +1,8 @@
-public class Test1 {
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+public class Train1 {
+
     public String firstMethod(String arg1) {
         int x = 0;
         Float y = null;
@@ -11,6 +15,10 @@ public class Test1 {
         int a = 1;
         int b = 2;
         float c = a - b;
+    }
+
+    public int someOtherDemo(Integer... args) {
+        return IntStream.of(args).sum();
     }
 
 }

@@ -18,9 +18,9 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-TRAIN_DIR=input_data/train
-VAL_DIR=input_data/val
-TEST_DIR=input_data/test
+TRAIN_DIR=input/training
+VAL_DIR=input/validation
+TEST_DIR=input/test
 RAW_FN_DIR=output_data
 RAW_TEST_FILE=test
 RAW_TRAIN_FILE=train

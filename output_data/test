@@ -1,0 +1,4 @@
+public String thirdMethod(String arg1, int arg2) {int x = 0;Float y = null;y = Float.MAX_VALUE;return String.format("%s: %d + %f = %f", arg1, x, y, (x + y) * arg2);}
+public float fourthMethod() {System.out.println("Heyeeeee");return 0.1;}public String firstMethod(String arg) {int x = 1;int y = 2;String msg = String.format("This is a message: %s", arg);msg = msg + String.format("\nWith a result: %d", x + y);return msg;}
+public void secondMethod(int x, int y) {int result = x + y;System.out.println(result);}
+public int zeroMethod() {return 1;}
