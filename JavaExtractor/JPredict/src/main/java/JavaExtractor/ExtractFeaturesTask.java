@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
@@ -40,9 +42,16 @@ public class ExtractFeaturesTask implements Callable<Void> {
 	public void processFile() {
 		ArrayList<ProgramFeatures> features;
 		CompilationUnit methodsClass = null;
+		String code = null;
 		try {
-			features = extractSingleFile();
-			methodsClass = extractSingleFileMethods();
+			code = new String(Files.readAllBytes(this.filePath));
+		} catch (IOException e) {
+			e.printStackTrace();
+			code = Common.EmptyString;
+		}
+		try {
+			features = extractSingleFile(code);
+			methodsClass = extractSingleFileMethods(code);
 		} catch (ParseException | IOException e) {
 			e.printStackTrace();
 			return;
@@ -59,7 +68,7 @@ public class ExtractFeaturesTask implements Callable<Void> {
 		}
 	}
 
-	public void writeMethodsToFile(String methodsString) {
+	public synchronized void writeMethodsToFile(String methodsString) {
 		if (m_CommandLineValues.fnDir == null || m_CommandLineValues.fnFilename == null) {
 			return;
 		}
@@ -67,20 +76,14 @@ public class ExtractFeaturesTask implements Callable<Void> {
 		File fnFile = fnPath.toFile();
 		try {
 			fnFile.createNewFile();
-			Files.write(fnPath, methodsString.getBytes());
+			Files.write(fnPath, methodsString.getBytes(), StandardOpenOption.APPEND);
 		} catch (IOException ex) {
 			return;
 		}
 	}
 
-	public ArrayList<ProgramFeatures> extractSingleFile() throws ParseException, IOException {
-		String code = null;
-		try {
-			code = new String(Files.readAllBytes(this.filePath));
-		} catch (IOException e) {
-			e.printStackTrace();
-			code = Common.EmptyString;
-		}
+	public ArrayList<ProgramFeatures> extractSingleFile(String code) throws ParseException, IOException {
+
 		FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues);
 
 		ArrayList<ProgramFeatures> features = featureExtractor.extractFeatures(code);
@@ -88,20 +91,21 @@ public class ExtractFeaturesTask implements Callable<Void> {
 		return features;
 	}
 
-	public CompilationUnit extractSingleFileMethods() throws ParseException, IOException {
+	public CompilationUnit extractSingleFileMethods(String code) throws ParseException, IOException {
 		CompilationUnit cu = new CompilationUnit();
 		ClassOrInterfaceDeclaration class_ = cu.addClass("Methods");
-		String code = null;
-		try {
-			code = new String(Files.readAllBytes(this.filePath));
-		} catch (IOException e) {
-			e.printStackTrace();
-			code = Common.EmptyString;
-		}
+
 		FeatureExtractor featureExtractor = new FeatureExtractor(m_CommandLineValues);
 
 		List<MethodDeclaration> methods = featureExtractor.extractASTMethods(code);
-		methods.forEach(method -> class_.addMethod(method.getName()).setBody(method.getBody()));
+		methods.forEach(
+				method -> {
+					class_.addMethod(method.getName())
+							.setModifiers(method.getModifiers())
+							.setBody(method.getBody())
+							.setParameters(method.getParameters())
+							.setType(method.getType());
+				});
 
 		return cu;
 	}
