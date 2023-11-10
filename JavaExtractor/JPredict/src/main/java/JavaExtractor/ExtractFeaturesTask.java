@@ -35,6 +35,28 @@ public class ExtractFeaturesTask implements Callable<Void> {
 
 	private static ConcurrentMap<File, BufferedWriter> writers = new ConcurrentHashMap<>();
 	private static ConcurrentMap<File, Integer> activeWriters = new ConcurrentHashMap<>();
+	private static BufferedWriter logWriter;
+
+	static {
+		Path logPath = Paths.get("./logs");
+		File f = logPath.toFile();
+		try {
+			f.createNewFile();
+			logWriter = new BufferedWriter(new FileWriter(f));
+		} catch (IOException ex) {
+			System.out.println("ERROR: could not create log file");
+			ex.printStackTrace();
+		}
+	}
+
+	private static void logMessage(String msg) {
+		try {
+			logWriter.write(msg);
+		} catch (Exception e) {
+			System.out.println("ERROR: could not write to log file");
+			e.printStackTrace();
+		}
+	}
 
 	private BufferedWriter getWriter(File file) {
 		Integer writersCount = activeWriters.get(file);
@@ -44,6 +66,8 @@ public class ExtractFeaturesTask implements Callable<Void> {
 				file.createNewFile();
 				writers.put(file, new BufferedWriter(new FileWriter(file)));
 			} catch (IOException | SecurityException ex) {
+				logMessage("Error could not create writer for file " + file);
+				ex.printStackTrace();
 				return null;
 			}
 		}
@@ -62,6 +86,8 @@ public class ExtractFeaturesTask implements Callable<Void> {
 			try {
 				wr.close();
 			} catch (IOException ex) {
+				logMessage("Error: could not close file " + file);
+				ex.printStackTrace();
 				return;
 			}
 		}
@@ -124,6 +150,8 @@ public class ExtractFeaturesTask implements Callable<Void> {
 		try {
 			this.writer.write(methodsString);
 		} catch (IOException ex) {
+			logMessage("Error could not write method");
+			ex.printStackTrace();
 			return;
 		}
 	}
