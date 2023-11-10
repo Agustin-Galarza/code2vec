@@ -135,8 +135,11 @@ public class ExtractFeaturesTask implements Callable<Void> {
 		int classOpeningIndex = classString.indexOf('{', 0);
 		int classClosingIndex = classString.lastIndexOf('}');
 
-		return classString.substring(classOpeningIndex + 2, classClosingIndex);
-		// return methodsClass.toString();
+		String methodString = classString.substring(classOpeningIndex + 2, classClosingIndex);
+		if (!methodString.endsWith("\n")) {
+			methodString += "\n";
+		}
+		return methodString;
 	}
 
 	public String featuresToString(ArrayList<ProgramFeatures> features) {
