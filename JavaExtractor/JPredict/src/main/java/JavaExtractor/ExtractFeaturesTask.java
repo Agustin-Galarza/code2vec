@@ -1,7 +1,10 @@
 package JavaExtractor;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,6 +12,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -25,10 +29,22 @@ import JavaExtractor.FeaturesEntities.ProgramFeatures;
 public class ExtractFeaturesTask implements Callable<Void> {
 	CommandLineValues m_CommandLineValues;
 	Path filePath;
+	private BufferedWriter writer;
 
 	public ExtractFeaturesTask(CommandLineValues commandLineValues, Path path) {
 		m_CommandLineValues = commandLineValues;
 		this.filePath = path;
+		if (m_CommandLineValues.fnDir == null || m_CommandLineValues.fnFilename == null) {
+			return;
+		}
+		Path fnPath = Paths.get(m_CommandLineValues.fnDir, m_CommandLineValues.fnFilename);
+		File fnFile = fnPath.toFile();
+		try {
+			fnFile.createNewFile(); // create file if it doesn't exist
+			this.writer = new BufferedWriter(new FileWriter(fnFile));
+		} catch (IOException | SecurityException ex) {
+			return;
+		}
 	}
 
 	@Override
@@ -69,14 +85,8 @@ public class ExtractFeaturesTask implements Callable<Void> {
 	}
 
 	public synchronized void writeMethodsToFile(String methodsString) {
-		if (m_CommandLineValues.fnDir == null || m_CommandLineValues.fnFilename == null) {
-			return;
-		}
-		Path fnPath = Paths.get(m_CommandLineValues.fnDir, m_CommandLineValues.fnFilename);
-		File fnFile = fnPath.toFile();
 		try {
-			fnFile.createNewFile();
-			Files.write(fnPath, methodsString.getBytes(), StandardOpenOption.APPEND);
+			this.writer.write(methodsString);
 		} catch (IOException ex) {
 			return;
 		}
