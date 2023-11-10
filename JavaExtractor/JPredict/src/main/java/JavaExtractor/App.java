@@ -31,6 +31,7 @@ public class App {
 			ExtractFeaturesTask extractFeaturesTask = new ExtractFeaturesTask(s_CommandLineValues,
 					s_CommandLineValues.File.toPath());
 			extractFeaturesTask.processFile();
+			extractFeaturesTask.onExit();
 		} else if (s_CommandLineValues.Dir != null) {
 			extractDir();
 		}

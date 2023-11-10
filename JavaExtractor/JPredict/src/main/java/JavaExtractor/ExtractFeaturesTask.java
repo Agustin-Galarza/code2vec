@@ -12,6 +12,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +33,40 @@ public class ExtractFeaturesTask implements Callable<Void> {
 	Path filePath;
 	private BufferedWriter writer;
 
+	private static ConcurrentMap<File, BufferedWriter> writers = new ConcurrentHashMap<>();
+	private static ConcurrentMap<File, Integer> activeWriters = new ConcurrentHashMap<>();
+
+	private BufferedWriter getWriter(File file) {
+		Integer writersCount = activeWriters.get(file);
+		if (writersCount == null) {
+			activeWriters.put(file, 0);
+			try {
+				file.createNewFile();
+				writers.put(file, new BufferedWriter(new FileWriter(file)));
+			} catch (IOException | SecurityException ex) {
+				return null;
+			}
+		}
+		activeWriters.compute(file, (k, v) -> v + 1);
+		return writers.get(file);
+	}
+
+	private void removeWriter(File file) {
+		Integer writersCount = activeWriters.compute(file, (k, v) -> v - 1);
+		if (writersCount == null) {
+			return;
+		}
+		if (writersCount == 0) {
+			activeWriters.remove(file);
+			BufferedWriter wr = writers.remove(file);
+			try {
+				wr.close();
+			} catch (IOException ex) {
+				return;
+			}
+		}
+	}
+
 	public ExtractFeaturesTask(CommandLineValues commandLineValues, Path path) {
 		m_CommandLineValues = commandLineValues;
 		this.filePath = path;
@@ -39,18 +75,18 @@ public class ExtractFeaturesTask implements Callable<Void> {
 		}
 		Path fnPath = Paths.get(m_CommandLineValues.fnDir, m_CommandLineValues.fnFilename);
 		File fnFile = fnPath.toFile();
-		try {
-			fnFile.createNewFile(); // create file if it doesn't exist
-			this.writer = new BufferedWriter(new FileWriter(fnFile));
-		} catch (IOException | SecurityException ex) {
-			return;
-		}
+		this.writer = getWriter(fnFile);
+	}
+
+	public void onExit() {
+		removeWriter(filePath.toFile());
 	}
 
 	@Override
 	public Void call() throws Exception {
 		//System.err.println("Extracting file: " + filePath);
 		processFile();
+		onExit();
 		//System.err.println("Done with file: " + filePath);
 		return null;
 	}
